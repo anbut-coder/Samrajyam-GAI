@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -5,23 +9,37 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000; //const PORT = 3000;
 
   // Increase the payload size limit to accommodate base64 images
   app.use(express.json({ limit: "50mb" }));
+  console.log("==================================");
+  console.log("Current Working Directory:", process.cwd());
+  console.log(
+  "GEMINI_API_KEY:",
+  process.env.GEMINI_API_KEY ? "FOUND ✅" : "NOT FOUND ❌"
+  );
+  console.log("PORT:", PORT);
+  console.log("==================================");
 
-  // Initialize Gemini client
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        "User-Agent": "aistudio-build",
-      },
-    },
-  });
-
+  
   // API Routes
   app.post("/api/analyze-image", async (req, res) => {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        error: "GEMINI_API_KEY is not configured.",
+      });
+    }
+    
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+
     try {
       const { image, mimeType } = req.body;
       if (!image || !mimeType) {
