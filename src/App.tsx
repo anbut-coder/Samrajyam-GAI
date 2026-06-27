@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./components/Dashboard";
 import { Inbox } from "./components/Inbox";
@@ -18,38 +18,47 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [modalType, setModalType] = useState<"task" | "note" | "reminder" | "meeting" | null>(null);
   const { data, addItems, updateItem, deleteItem } = useStore();
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [capturedFile, setCapturedFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      data.tasks.forEach((task) => {
+        if (!task.completed && task.dueDate && task.dueTime && !task.notificationSent) {
+          const taskDate = new Date(`${task.dueDate}T${task.dueTime}`);
+          if (now >= taskDate) {
+            if ("Notification" in window && Notification.permission === "granted") {
+              new Notification("Samrajyam", {
+                body: task.title,
+              });
+            }
+            updateItem('tasks', task.id, { ...task, notificationSent: true });
+          }
+        }
+      });
+    };
+
+    checkReminders();
+    const interval = setInterval(checkReminders, 60000);
+    return () => clearInterval(interval);
+  }, [data.tasks, updateItem]);
 
   const handleSaveModal = (newData: any) => {
     addItems(newData);
     setCurrentView("dashboard");
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCapturedFile(e.target.files[0]);
-      setCurrentView("inbox");
-      e.target.value = "";
-    }
-  };
-
   const triggerAICapture = () => {
-    fileInputRef.current?.click();
+    setCurrentView("inbox");
   };
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-on-background overflow-hidden w-full">
-      {/* Hidden file input for mobile AI Capture */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept="image/*" 
-        className="hidden" 
-      />
-      
       {/* Top Header */}
       <header className="sticky top-0 z-30 h-16 border-b border-border-subtle flex items-center justify-between px-4 md:px-6 bg-surface flex-shrink-0">
         <div className="flex items-center gap-4">
@@ -117,7 +126,7 @@ export default function App() {
         </div>
         
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0 bg-background">
+        <main className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0 bg-background md:pb-0">
           {currentView === "dashboard" ? (
             <Dashboard 
               data={data} 
@@ -135,8 +144,6 @@ export default function App() {
                 addItems(approvedData);
                 setCurrentView("dashboard");
               }} 
-              initialFile={capturedFile}
-              onClearInitialFile={() => setCapturedFile(null)}
             />
           )}
           
@@ -149,6 +156,25 @@ export default function App() {
           />
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface border-t border-border-subtle flex justify-around items-center z-30 pb-safe">
+        <button 
+          onClick={() => setCurrentView("dashboard")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${currentView === 'dashboard' ? 'text-primary' : 'text-secondary-text'}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          <span className="text-[10px] font-medium">Dashboard</span>
+        </button>
+        <div className="w-16"></div> {/* Spacer for FAB */}
+        <button 
+          onClick={() => setCurrentView("inbox")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${currentView === 'inbox' ? 'text-primary' : 'text-secondary-text'}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          <span className="text-[10px] font-medium">AI Inbox</span>
+        </button>
+      </nav>
       
       <ManualEntryModals 
         type={modalType} 

@@ -3,6 +3,11 @@ export interface Task {
   title: string;
   description?: string;
   priority?: "Low" | "Medium" | "High" | string;
+  dueDate?: string;
+  dueTime?: string;
+  category?: string;
+  completed?: boolean;
+  notificationSent?: boolean;
 }
 
 export interface Meeting {

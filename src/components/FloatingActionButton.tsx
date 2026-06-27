@@ -38,7 +38,7 @@ export function FloatingActionButton({
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-hover active:scale-95 transition-all z-40 focus:outline-none focus:ring-4 focus:ring-primary/30"
+        className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-hover active:scale-95 transition-all z-40 focus:outline-none focus:ring-4 focus:ring-primary/30"
         aria-label="New Item"
       >
         <Plus size={24} />

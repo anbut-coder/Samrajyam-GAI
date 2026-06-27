@@ -37,7 +37,7 @@ export function ManualEntryModals({ type, onClose, onSave }: ManualEntryModalsPr
     
     switch (type) {
       case 'task':
-        onSave({ tasks: [{ id, title, description, priority }] });
+        onSave({ tasks: [{ id, title, description, priority, dueDate: date, dueTime: time, category: attendees }] });
         break;
       case 'note':
         onSave({ notes: [{ id, title, content: description }] });
@@ -82,18 +82,34 @@ export function ManualEntryModals({ type, onClose, onSave }: ManualEntryModalsPr
         )}
 
         {type === 'task' && (
-          <div>
-            <Label>Priority</Label>
-            <select 
-              value={priority} 
-              onChange={(e) => setPriority(e.target.value)}
-              className="w-full h-11 px-4 bg-surface-hover border border-border-subtle rounded-lg text-sm text-on-background focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
-            >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-          </div>
+          <>
+            <div>
+              <Label>Priority</Label>
+              <select 
+                value={priority} 
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full h-11 px-4 bg-surface-hover border border-border-subtle rounded-lg text-sm text-on-background focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Due Date</Label>
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              </div>
+              <div>
+                <Label>Due Time</Label>
+                <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Input value={attendees} onChange={(e) => setAttendees(e.target.value)} placeholder="e.g. Work, Personal" />
+            </div>
+          </>
         )}
 
         {(type === 'meeting' || type === 'reminder') && (

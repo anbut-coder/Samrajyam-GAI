@@ -120,10 +120,12 @@ function EditableCard({ item, type, index, onUpdate, onDelete, variant, title }:
         <div className={`w-1 rounded-full bg-${variant}`}></div>
         <div className="flex-1 space-y-3">
           {Object.keys(localItem).map(key => {
-            if (key === 'id') return null;
+            if (key === 'id' || key === 'dueDateSource' || key === 'dueTimeSource') return null;
             return (
               <div key={key}>
-                <label className="block text-xs text-secondary-text mb-1 capitalize">{key}</label>
+                <label className="block text-xs text-secondary-text mb-1 capitalize">
+                  {key === 'dueDate' ? 'Due Date' : key === 'dueTime' ? 'Due Time' : key}
+                </label>
                 {key === 'content' || key === 'description' ? (
                   <textarea
                     name={key}
@@ -133,7 +135,7 @@ function EditableCard({ item, type, index, onUpdate, onDelete, variant, title }:
                   />
                 ) : (
                   <input
-                    type="text"
+                    type={key === 'dueDate' || key === 'date' ? 'date' : key === 'dueTime' || key === 'time' ? 'time' : 'text'}
                     name={key}
                     value={localItem[key] || ""}
                     onChange={handleChange}
@@ -163,12 +165,24 @@ function EditableCard({ item, type, index, onUpdate, onDelete, variant, title }:
         
         <div className="mt-1 space-y-1">
           {Object.keys(item).map(key => {
-            if (key === 'title' || key === 'id' || !item[key]) return null;
+            if (key === 'title' || key === 'id' || key === 'dueDateSource' || key === 'dueTimeSource' || !item[key]) return null;
+            let displayKey = key;
+            if (key === 'dueDate') displayKey = 'Due Date';
+            if (key === 'dueTime') displayKey = 'Due Time';
+            
+            let sourceTag = null;
+            if (key === 'dueDate' && item.dueDateSource) {
+              sourceTag = <span className="ml-1 text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">({item.dueDateSource})</span>;
+            } else if (key === 'dueTime' && item.dueTimeSource) {
+              sourceTag = <span className="ml-1 text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">({item.dueTimeSource})</span>;
+            }
+
             return (
-              <p key={key} className="text-xs text-secondary-text line-clamp-2">
-                <span className="capitalize mr-1">{key}:</span> 
+              <div key={key} className="text-xs text-secondary-text line-clamp-2 flex items-center">
+                <span className="capitalize mr-1">{displayKey}:</span> 
                 {Array.isArray(item[key]) ? item[key].join(', ') : item[key]}
-              </p>
+                {sourceTag}
+              </div>
             );
           })}
         </div>
